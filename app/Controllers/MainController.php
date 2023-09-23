@@ -7,24 +7,27 @@ use App\Controllers\BaseController;
 
 class MainController extends BaseController
 {
+    protected $CategoryModel;
+    protected $main;
+
+    public function __construct()
+    {
+        $this->CategoryModel = new CategoryModel();
+        $this->main = new MainModel();
+    }
     
     public function index()
     {
-        $CategoryModel = new CategoryModel();
-        $data['productcategories'] = $CategoryModel->findAll();
-    
-        $productModel = new MainModel();
-        $data['product'] = $productModel->findAll();
+        $data['productcategories'] = $this->CategoryModel->findAll();
+        $data['product'] = $this->main->findAll();
     
         return view('main', $data);
     }
     
     public function edit($id)
     {
-        $CategoryModel = new CategoryModel();
-        $data['productcategories'] = $CategoryModel->findAll();
-        $main = new MainModel();
-        $data['product'] = $main->find($id);
+        $data['productcategories'] = $this->CategoryModel->findAll();
+        $data['product'] = $this->main->find($id);
     
         if (empty($data['product'])) {
             echo 'Product not found.';
@@ -42,65 +45,52 @@ class MainController extends BaseController
             'ProductCategory' => $this->request->getVar('ProductCategory'),
             'ProductQuantity' => $this->request->getVar('ProductQuantity'),
             'ProductPrice' => $this->request->getVar('ProductPrice'),
-
         ];
-        $CategoryModel = new CategoryModel();
-        $main = new MainModel();
     
         if ($id != null) {
-           
-            $main->set($data)->where('ID', $id)->update();
+            $this->main->set($data)->where('ID', $id)->update();
         } else {
-           
-            $main->insert($data);
+            $this->main->insert($data);
         }
-        $main = new MainModel();
-        $CategoryModel = new CategoryModel();
-        $data['productcategories'] = $CategoryModel->findAll();
-        $data['product'] = $main->findAll();
+
+        $data['productcategories'] = $this->CategoryModel->findAll();
+        $data['product'] = $this->main->findAll();
         return view('main', $data);   
     }
+    
     public function delete($id){
-        $main= new MainModel();
-        $CategoryModel = new CategoryModel();
-        $data['productcategories'] = $CategoryModel->findAll();
-        $main->where('ID', $id)->delete();      
-        $data['product'] = $main->findAll();
+        $this->main->where('ID', $id)->delete();      
+        $data['productcategories'] = $this->CategoryModel->findAll();
+        $data['product'] = $this->main->findAll();
         return view('main', $data); 
     }
 
-public function add()
-{
-    $CategoryModel = new CategoryModel();
-
-    if ($this->request->getMethod() === 'post') {
-        $data = [
-            'ProductCategory' => $this->request->getPost('ProductCategory')
-        ];
-        $CategoryModel->insert($data);
-    }
-    $data['productcategories'] = $CategoryModel->findAll();
-    return view('add', $data);
-}
-public function deletecateg($id)
+    public function add()
     {
-        $CategoryModel = new CategoryModel();
-        $category = $CategoryModel->find($id);
+        if ($this->request->getMethod() === 'post') {
+            $data = [
+                'ProductCategory' => $this->request->getPost('ProductCategory')
+            ];
+            $this->CategoryModel->insert($data);
+        }
+        $data['productcategories'] = $this->CategoryModel->findAll();
+        return view('add', $data);
+    }
+
+    public function deletecateg($id)
+    {
+        $category = $this->CategoryModel->find($id);
         if (!$category) {
             return redirect()->to('add')->with('error', 'Category not found.');
         }
         
-        $CategoryModel->delete($id);
+        $this->CategoryModel->delete($id);
         return redirect()->to('add')->with('success', 'Category deleted successfully.');
     }
+    
     public function back(){
-        $CategoryModel = new CategoryModel();
-        $data['productcategories'] = $CategoryModel->findAll();
-    
-        $productModel = new MainModel();
-        $data['product'] = $productModel->findAll();
-    
+        $data['productcategories'] = $this->CategoryModel->findAll();
+        $data['product'] = $this->main->findAll();
         return view('main', $data);
-
     }
 }
